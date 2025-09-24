@@ -12,7 +12,6 @@ app.use("/api/auth", authRoutes);
 
 console.log(path.join(__dirname, "../frontend", "dist"));
 
-
 if (config.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend", "dist")));
   app.get("*", (req, res) => {
@@ -20,6 +19,6 @@ if (config.NODE_ENV === "production") {
   });
 }
 
-app.listen(3000, () => {
+app.listen(config.PORT, () => {
   console.log(`Server started at http://localhost:${config.PORT}`);
 });
