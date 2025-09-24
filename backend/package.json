@@ -1,0 +1,33 @@
+{
+  "name": "nextalk",
+  "version": "1.0.0",
+  "description": "Nextalk is a modern real-time chat application that allows users to send messages instantly, create chat rooms, and stay connected with friends, family, or teams. Built with Node.js and Express for the backend, and designed to be fast, secure, and scalable.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [
+    "chat",
+    "messaging",
+    "real-time",
+    "socket",
+    "chat-app",
+    "express",
+    "nodejs",
+    "nextalk"
+  ],
+  "author": "Ashish Pawar",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
