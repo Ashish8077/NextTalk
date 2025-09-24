@@ -4,7 +4,8 @@
   "description": "Nextalk is a modern real-time chat application that allows users to send messages instantly, create chat rooms, and stay connected with friends, family, or teams. Built with Node.js and Express for the backend, and designed to be fast, secure, and scalable.",
   "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "keywords": [
     "chat",
