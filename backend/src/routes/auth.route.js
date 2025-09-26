@@ -1,12 +1,15 @@
 import { Router } from "express";
 import { signup, login, logout } from "../controllers/auth.controller.js";
+import { validate } from "../middlewares/validate.js";
+import { signupSchema } from "../validation/auth.validation.js";
+import { sanitizeRequest } from "../middlewares/sanitizeRequest.js";
 
 const router = Router();
 
-router.get("/signup", signup);
+router.post("/signup", validate(signupSchema), sanitizeRequest, signup);
 
-router.get("/login", login);
+router.post("/login", login);
 
-router.get("/logout", logout);
+router.post("/logout", logout);
 
 export default router;
