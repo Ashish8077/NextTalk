@@ -4,12 +4,15 @@ import path from "path";
 import config from "./config/index.js";
 import authRoutes from "./routes/auth.route.js";
 import { connectDB } from "./lib/db.js";
+import { errorHandler } from "./utils/errorHandler.js";
 
 const app = express();
 const __dirname = path.resolve();
 
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+
+app.use(errorHandler);
 
 if (config.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend", "dist")));

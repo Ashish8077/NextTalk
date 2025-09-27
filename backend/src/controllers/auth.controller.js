@@ -1,37 +1,35 @@
-import User from "../models/user.model.js";
-import { existingUser } from "../services/auth.service.js";
-import bcrypt from "bcrypt";
+import { catchAsync } from "../utils/catchAsync.js";
+import {
+  sendWelcomeEmailService,
+  signupService,
+  verifyEmailService,
+} from "../services/auth.service.js";
+import { generateTokenAndSetCookie } from "../utils/token.js";
 
-export const signup = async (req, res) => {
-  const { fullname, email, password } = req.body;
-  console.log(fullname, email, password);
-  const user = await existingUser(email);
-  if (user) {
-    return res.status(409).json({
-      success: false,
-      message: "Email already in use",
-    });
-  }
-
-  
-
-  const newUser = new User({
-    fullname,
-    email,
-    password: hashedPassword,
-  });
-
-  console.log(newUser);
-
+export const signup = catchAsync(async (req, res) => {
+  const data = await signupService(req.body);
   return res.status(201).json({
     success: true,
-    data: {
-      id: newUser._id,
-      fullname: newUser.fullname,
-      email: newUser.email,
-    },
+    message:
+      "Signup successful. Please check your email to verify your account.",
+    data,
   });
-};
+});
+
+export const verifyEmail = catchAsync(async (req, res) => {
+  const data = await verifyEmailService(req.query);
+  await generateTokenAndSetCookie(res, data.id);
+  
+  // Send welcome email (non-critical, failure won't block response)
+  if (data.isVerified) {
+    await sendWelcomeEmailService(data.fullname, data.email);
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Email verified successfully",
+    data,
+  });
+});
 
 export const login = async (req, res) => {
   res.send("You hit the login controller");
