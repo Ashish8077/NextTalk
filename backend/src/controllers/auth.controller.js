@@ -1,5 +1,6 @@
 import { catchAsync } from "../utils/catchAsync.js";
 import {
+  resendVerificationEmailService,
   sendWelcomeEmailService,
   signupService,
   verifyEmailService,
@@ -19,10 +20,10 @@ export const signup = catchAsync(async (req, res) => {
 export const verifyEmail = catchAsync(async (req, res) => {
   const data = await verifyEmailService(req.query);
   await generateTokenAndSetCookie(res, data.id);
-  
+
   // Send welcome email (non-critical, failure won't block response)
   if (data.isVerified) {
-    await sendWelcomeEmailService(data.fullname, data.email);
+    sendWelcomeEmailService(data.fullname, data.email);
   }
   return res.status(200).json({
     success: true,
@@ -31,9 +32,30 @@ export const verifyEmail = catchAsync(async (req, res) => {
   });
 });
 
-export const login = async (req, res) => {
-  res.send("You hit the login controller");
-};
+export const resendVerificationEmail = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new AppError("Email is required", 400);
+  }
+
+  await resendVerificationEmailService(email);
+
+  return res.status(200).json({
+    success: true,
+    message: "Verification email has been resent. Please check your inbox.",
+  });
+});
+
+
+export const login = catchAsync(async (req, res) => {
+  const data = await loginService(req.body);
+  return res.status(200).json({
+    success: true,
+    message: "Login successfully",
+    data,
+  });
+});
 
 export const logout = async (req, res) => {
   res.send("You hit the logout controller");

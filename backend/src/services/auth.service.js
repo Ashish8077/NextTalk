@@ -1,33 +1,33 @@
-import config from "../config/index.js";
 import {
   sendVerificationEmail,
   sendWelcomeEmail,
 } from "../emails/emailHandlers.js";
 import {
   createUser,
-  deleteUserById,
   findUserByEmail,
   findVerificationToken,
 } from "../repositories/user.repository.js";
 
 import crypto from "crypto";
-import { hashToken } from "../utils/token.js";
+import {
+  generateVerificationTokenAndExpiry,
+  hashToken,
+} from "../utils/token.js";
 import { AppError } from "../utils/AppError.js";
 
 export const signupService = async ({ fullname, email, password }) => {
+  // Check existing user
   const existingUser = await findUserByEmail(email);
 
-  if (existingUser) {
-    throw new AppError("Email already in use", 409);
-  }
+  if (existingUser) throw new AppError("Email already in use", 409);
 
-  const verificationToken = crypto.randomBytes(32).toString("hex");
+  // Generate verification token
+  const { verificationToken, verificationTokenExpiry, verificationUrl } =
+    generateVerificationTokenAndExpiry(email);
+
   const hashedToken = hashToken(verificationToken);
 
-  
-
-  const verificationTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
-
+  // Create user
   const newUser = await createUser({
     fullname,
     email,
@@ -36,8 +36,9 @@ export const signupService = async ({ fullname, email, password }) => {
     verificationTokenExpiry,
   });
 
-  const verificationUrl = `${config.FRONTEND_URL}/api/auth/verify-email?email=${email}&token=${verificationToken}`;
+  // Build verification URL
 
+  // Attempt to send verification email (fire-and-forget)
   try {
     await sendVerificationEmail(
       fullname,
@@ -46,21 +47,8 @@ export const signupService = async ({ fullname, email, password }) => {
       verificationUrl
     );
   } catch (error) {
-    // 1. Log the failure
-    console.error(
-      "Failed to send verification email for user:",
-      newUser.email,
-      error
-    );
-
-    //2. ROLLBACK: Delete the user from the database
-    await deleteUserById(newUser._id);
-
-    // Throw a controlled error to the client
-    throw new AppError(
-      "Signup successful, but the verification email could not be sent. Please try again",
-      500
-    );
+    console.error("Failed to send verification email for user:", email, error);
+    // Do not rollback user creation; user can manually request resend
   }
 
   return {
@@ -71,19 +59,22 @@ export const signupService = async ({ fullname, email, password }) => {
 };
 
 export const verifyEmailService = async ({ email, token }) => {
-  
   if (!token) {
     throw new AppError("Invalid or expired token", 400);
   }
   const hashedToken = hashToken(token);
 
-
-
   const user = await findVerificationToken(email, hashedToken);
-
-  if (!user) {
+  if (
+    !user ||
+    user.verificationToken !== hashedToken ||
+    user.verificationTokenExpiry < Date.now()
+  ) {
     throw new AppError("Invalid or expired verification link", 400);
   }
+
+  console.log(user.verificationToken === hashedToken);
+
   user.isVerified = true;
   user.verificationToken = undefined;
   user.verificationTokenExpiry = undefined;
@@ -94,6 +85,29 @@ export const verifyEmailService = async ({ email, token }) => {
     email: user.email,
     isVerified: user.isVerified,
   };
+};
+
+export const resendVerificationEmailService = async (email) => {
+  const user = await findUserByEmail(email);
+  if (!user) throw AppError("User not found", 404);
+
+  const { verificationToken, verificationTokenExpiry, verificationUrl } =
+    generateVerificationTokenAndExpiry(email);
+
+  user.verificationToken = hashToken(verificationToken);
+  user.verificationTokenExpiry = verificationTokenExpiry;
+  await user.save();
+
+  try {
+    await sendVerificationEmail(
+      user.fullname,
+      email,
+      verificationToken,
+      verificationUrl
+    );
+  } catch (error) {
+    console.error("Failed to resend verification email:", email, error);
+  }
 };
 
 export const sendWelcomeEmailService = async (fullname, email) => {

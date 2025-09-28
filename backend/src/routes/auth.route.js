@@ -4,6 +4,7 @@ import {
   login,
   logout,
   verifyEmail,
+  resendVerificationEmail,
 } from "../controllers/auth.controller.js";
 import { validate } from "../middlewares/validate.js";
 import { signupSchema } from "../validation/auth.validation.js";
@@ -13,6 +14,7 @@ const router = Router();
 
 router.post("/signup", validate(signupSchema), sanitizeRequest, signup);
 router.get("/verify-email", verifyEmail);
+router.post("/reverify-email", resendVerificationEmail);
 
 router.post("/login", login);
 

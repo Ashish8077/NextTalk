@@ -24,14 +24,14 @@ export const sendVerificationEmail = async (
     });
     return response;
   } catch (error) {
-    cconsole.error("Error while sending verification email:", error);
+    console.error("Error while sending verification email:", error);
     throw new Error(error.message || "Failed to send verification email");
   }
 };
 
 export const sendWelcomeEmail = async (fullname, email) => {
   await transporter.sendMail({
-    from: '"VibeChat" <noreply@VibeChat.com>',
+    from: '"VibeChat"<ashishpawar6522@gmail.com>',
     to: email,
     subject: "Welcome to VibeChat 🎉",
     text: `Hi ${fullname}, welcome to VibeChat!`,
