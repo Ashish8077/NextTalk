@@ -1,5 +1,120 @@
-import User from "../models/user.model.js";
+import {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from "../emails/emailHandlers.js";
+import {
+  createUser,
+  findUserByEmail,
+  findVerificationToken,
+} from "../repositories/user.repository.js";
 
-export const existingUser = async (email) => {
-  return await User.findOne({ email });
+import crypto from "crypto";
+import {
+  generateVerificationTokenAndExpiry,
+  hashToken,
+} from "../utils/token.js";
+import { AppError } from "../utils/AppError.js";
+
+export const signupService = async ({ fullname, email, password }) => {
+  // Check existing user
+  const existingUser = await findUserByEmail(email);
+
+  if (existingUser) throw new AppError("Email already in use", 409);
+
+  // Generate verification token
+  const { verificationToken, verificationTokenExpiry, verificationUrl } =
+    generateVerificationTokenAndExpiry(email);
+
+  const hashedToken = hashToken(verificationToken);
+
+  // Create user
+  const newUser = await createUser({
+    fullname,
+    email,
+    password,
+    verificationToken: hashedToken,
+    verificationTokenExpiry,
+  });
+
+  // Build verification URL
+
+  // Attempt to send verification email (fire-and-forget)
+  try {
+    await sendVerificationEmail(
+      fullname,
+      email,
+      verificationToken,
+      verificationUrl
+    );
+  } catch (error) {
+    console.error("Failed to send verification email for user:", email, error);
+    // Do not rollback user creation; user can manually request resend
+  }
+
+  return {
+    id: newUser._id,
+    fullname: newUser.fullname,
+    email: newUser.email,
+  };
+};
+
+export const verifyEmailService = async ({ email, token }) => {
+  if (!token) {
+    throw new AppError("Invalid or expired token", 400);
+  }
+  const hashedToken = hashToken(token);
+
+  const user = await findVerificationToken(email, hashedToken);
+  if (
+    !user ||
+    user.verificationToken !== hashedToken ||
+    user.verificationTokenExpiry < Date.now()
+  ) {
+    throw new AppError("Invalid or expired verification link", 400);
+  }
+
+  console.log(user.verificationToken === hashedToken);
+
+  user.isVerified = true;
+  user.verificationToken = undefined;
+  user.verificationTokenExpiry = undefined;
+  await user.save();
+  return {
+    fullname: user.fullname,
+    id: user._id,
+    email: user.email,
+    isVerified: user.isVerified,
+  };
+};
+
+export const resendVerificationEmailService = async (email) => {
+  const user = await findUserByEmail(email);
+  if (!user) throw AppError("User not found", 404);
+
+  const { verificationToken, verificationTokenExpiry, verificationUrl } =
+    generateVerificationTokenAndExpiry(email);
+
+  user.verificationToken = hashToken(verificationToken);
+  user.verificationTokenExpiry = verificationTokenExpiry;
+  await user.save();
+
+  try {
+    await sendVerificationEmail(
+      user.fullname,
+      email,
+      verificationToken,
+      verificationUrl
+    );
+  } catch (error) {
+    console.error("Failed to resend verification email:", email, error);
+  }
+};
+
+export const sendWelcomeEmailService = async (fullname, email) => {
+  try {
+    await sendWelcomeEmail(fullname, email);
+  } catch (error) {
+    // Non-critical: just log and swallow the error
+    console.error(`Failed to send welcome email to ${email}:`, error);
+  }
 };

@@ -1,7 +1,7 @@
 {
-  "name": "nextalk",
+  "name": "vibechat",
   "version": "1.0.0",
-  "description": "Nextalk is a modern real-time chat application that allows users to send messages instantly, create chat rooms, and stay connected with friends, family, or teams. Built with Node.js and Express for the backend, and designed to be fast, secure, and scalable.",
+  "description": "VibeChatis a modern real-time chat application that allows users to send messages instantly, create chat rooms, and stay connected with friends, family, or teams. Built with Node.js and Express for the backend, and designed to be fast, secure, and scalable.",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
@@ -15,19 +15,23 @@
     "chat-app",
     "express",
     "nodejs",
-    "nextalk"
+    "vibechat"
   ],
   "author": "Ashish Pawar",
   "license": "ISC",
   "type": "module",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "bull": "^4.16.5",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "ioredis": "^5.8.0",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.2"
+    "mongoose": "^8.18.2",
+    "nodemailer": "^7.0.6",
+    "resend": "^6.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

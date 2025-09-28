@@ -5,9 +5,11 @@ export function toJSONPlugin(schema) {
   schema.set("toJSON", {
     virtuals: true,
     versionKey: false,
-    transfrom: (doc, ret) => {
+    transform: (doc, ret) => {
       delete ret._id;
       delete ret.password;
+      delete ret.verificationToken;
+      delete ret.verificationTokenExpiry;
       return ret;
     },
   });
