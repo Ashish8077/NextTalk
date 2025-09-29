@@ -51,12 +51,13 @@ export const resendVerificationEmail = catchAsync(async (req, res) => {
 });
 
 export const login = catchAsync(async (req, res) => {
-  const data = await loginService(req.body);
-  return res.status(200).json({
-    success: true,
-    message: "Login successfully",
-    data,
-  });
+  console.log("Checking if login branch is created")
+  // const data = await loginService(req.body);
+  // return res.status(200).json({
+  //   success: true,
+  //   message: "Login successfully",
+  //   data,
+  // });
 });
 
 export const logout = async (req, res) => {
