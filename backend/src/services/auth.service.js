@@ -11,7 +11,7 @@ import {
 import crypto from "crypto";
 import {
   generateVerificationTokenAndExpiry,
-  hashToken,
+  createHash,
 } from "../utils/token.js";
 import { AppError } from "../utils/AppError.js";
 
@@ -25,7 +25,7 @@ export const signupService = async ({ fullname, email, password }) => {
   const { verificationToken, verificationTokenExpiry, verificationUrl } =
     generateVerificationTokenAndExpiry(email);
 
-  const hashedToken = hashToken(verificationToken);
+  const hashedToken = createHash(verificationToken);
 
   // Create user
   const newUser = await createUser({
@@ -61,7 +61,7 @@ export const verifyEmailService = async ({ email, token }) => {
     throw new AppError("Email or token missing.", 400);
   }
 
-  const hashedToken = hashToken(token);
+  const hashedToken = createHash(token);
 
   const user = await findVerificationToken(email, hashedToken);
 
@@ -88,7 +88,7 @@ export const resendVerificationEmailService = async (email) => {
   const { verificationToken, verificationTokenExpiry, verificationUrl } =
     generateVerificationTokenAndExpiry(email);
 
-  user.verificationToken = hashToken(verificationToken);
+  user.verificationToken = createHash(verificationToken);
   user.verificationTokenExpiry = verificationTokenExpiry;
   await user.save();
 

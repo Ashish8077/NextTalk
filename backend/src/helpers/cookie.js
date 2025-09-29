@@ -1,9 +1,9 @@
 import config from "../config/index.js";
 import { redis } from "../lib/redis.js";
-import { hashToken } from "../utils/token.js";
+import { createHash } from "../utils/token.js";
 
 export const setRefreshTokenInDB = async (userId, refreshToken) => {
-  const hashedToken = hashToken(refreshToken);
+  const hashedToken = createHash(refreshToken);
 
   return await redis.set(
     `VibeChatRefreshToken:${userId}`,
