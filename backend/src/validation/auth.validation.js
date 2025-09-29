@@ -26,3 +26,25 @@ export const signupSchema = Joi.object({
         "Password must contain uppercase, lowercase, number, and special character",
     }),
 });
+
+export const verifyOtpSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.empty": "Email is required",
+    "string.email": "Email must be valid",
+  }),
+  otpCode: Joi.string().length(6).pattern(/^\d+$/).required().messages({
+    "string.empty": "OTP code is required",
+    "string.length": "OTP code must be exactly 6 digits",
+    "string.pattern.base": "OTP code must contain only digits",
+  }),
+});
+
+export const loginSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.empty": "Email is required",
+    "string.email": "Email must be valid",
+  }),
+  password: Joi.string().required().messages({
+    "string.empty": "Password is required",
+  }),
+});

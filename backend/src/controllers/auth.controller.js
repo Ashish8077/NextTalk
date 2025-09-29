@@ -1,9 +1,11 @@
 import { catchAsync } from "../utils/catchAsync.js";
 import {
+  loginService,
   resendVerificationEmailService,
   sendWelcomeEmailService,
   signupService,
   verifyEmailService,
+  verifyOtpService,
 } from "../services/auth.service.js";
 import { generateTokenAndSetCookie } from "../utils/token.js";
 
@@ -52,6 +54,16 @@ export const resendVerificationEmail = catchAsync(async (req, res) => {
 
 export const login = catchAsync(async (req, res) => {
   const data = await loginService(req.body);
+  return res.status(200).json({
+    success: true,
+    message: "OTP has been sent to your email for verification",
+    data,
+  });
+});
+
+export const verifyOtp = catchAsync(async (req, res) => {
+  const data = await verifyOtpService(req.body);
+  await generateTokenAndSetCookie(res, data.id);
   return res.status(200).json({
     success: true,
     message: "Login successfully",
