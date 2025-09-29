@@ -24,8 +24,6 @@ export const createUser = async ({
 export const findVerificationToken = async (email, hashedToken) => {
   return await User.findOne({
     email,
-    verificationToken: hashedToken,
-    verificationTokenExpiry: { $gt: Date.now() },
   });
 };
 
