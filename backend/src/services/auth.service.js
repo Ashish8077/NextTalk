@@ -36,8 +36,6 @@ export const signupService = async ({ fullname, email, password }) => {
     verificationTokenExpiry,
   });
 
-  // Build verification URL
-
   // Attempt to send verification email (fire-and-forget)
   try {
     await sendVerificationEmail(

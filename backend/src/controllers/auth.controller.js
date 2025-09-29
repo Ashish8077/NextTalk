@@ -25,6 +25,7 @@ export const verifyEmail = catchAsync(async (req, res) => {
   if (data.isVerified) {
     sendWelcomeEmailService(data.fullname, data.email);
   }
+
   return res.status(200).json({
     success: true,
     message: "Email verified successfully",

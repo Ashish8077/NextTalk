@@ -1,4 +1,5 @@
 export function createVerificationEmailTemplate(name, verificationUrl) {
+  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
