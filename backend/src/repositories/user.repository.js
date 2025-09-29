@@ -2,7 +2,7 @@ import { openSync } from "fs";
 import User from "../models/user.model.js";
 
 export const findUserByEmail = async (email) => {
-  return await User.findOne({ email: email.toLowerCase() });
+  return await User.findOne({ email });
 };
 
 export const createUser = async ({
@@ -23,7 +23,7 @@ export const createUser = async ({
 
 export const findVerificationToken = async (email, hashedToken) => {
   return await User.findOne({
-    email: email,
+    email,
     verificationToken: hashedToken,
     verificationTokenExpiry: { $gt: Date.now() },
   });

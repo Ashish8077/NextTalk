@@ -35,6 +35,8 @@ export const verifyEmail = catchAsync(async (req, res) => {
 export const resendVerificationEmail = catchAsync(async (req, res) => {
   const { email } = req.body;
 
+  console.log(email);
+
   if (!email) {
     throw new AppError("Email is required", 400);
   }
@@ -46,7 +48,6 @@ export const resendVerificationEmail = catchAsync(async (req, res) => {
     message: "Verification email has been resent. Please check your inbox.",
   });
 });
-
 
 export const login = catchAsync(async (req, res) => {
   const data = await loginService(req.body);

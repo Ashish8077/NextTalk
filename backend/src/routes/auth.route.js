@@ -13,8 +13,8 @@ import { sanitizeRequest } from "../middlewares/sanitizeRequest.js";
 const router = Router();
 
 router.post("/signup", validate(signupSchema), sanitizeRequest, signup);
-router.get("/verify-email", verifyEmail);
-router.post("/reverify-email", resendVerificationEmail);
+router.get("/verify-email", sanitizeRequest, verifyEmail);
+router.post("/reverify-email", sanitizeRequest, resendVerificationEmail);
 
 router.post("/login", login);
 
