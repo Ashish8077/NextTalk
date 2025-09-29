@@ -59,21 +59,17 @@ export const signupService = async ({ fullname, email, password }) => {
 };
 
 export const verifyEmailService = async ({ email, token }) => {
-  if (!token) {
-    throw new AppError("Invalid or expired token", 400);
+  if (!email || !token) {
+    throw new AppError("Email or token missing.", 400);
   }
+
   const hashedToken = hashToken(token);
 
   const user = await findVerificationToken(email, hashedToken);
-  if (
-    !user ||
-    user.verificationToken !== hashedToken ||
-    user.verificationTokenExpiry < Date.now()
-  ) {
+
+  if (!user || user.verificationToken !== hashedToken) {
     throw new AppError("Invalid or expired verification link", 400);
   }
-
-  console.log(user.verificationToken === hashedToken);
 
   user.isVerified = true;
   user.verificationToken = undefined;
@@ -89,7 +85,7 @@ export const verifyEmailService = async ({ email, token }) => {
 
 export const resendVerificationEmailService = async (email) => {
   const user = await findUserByEmail(email);
-  if (!user) throw AppError("User not found", 404);
+  if (!user) throw new AppError("User not found", 404);
 
   const { verificationToken, verificationTokenExpiry, verificationUrl } =
     generateVerificationTokenAndExpiry(email);
@@ -101,7 +97,7 @@ export const resendVerificationEmailService = async (email) => {
   try {
     await sendVerificationEmail(
       user.fullname,
-      email,
+      user.email,
       verificationToken,
       verificationUrl
     );
