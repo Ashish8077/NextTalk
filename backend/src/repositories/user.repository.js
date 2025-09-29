@@ -1,6 +1,8 @@
 import { openSync } from "fs";
 import User from "../models/user.model.js";
 
+import Otp from "../models/otp.model.js";
+
 export const findUserByEmail = async (email) => {
   return await User.findOne({ email });
 };
@@ -29,4 +31,12 @@ export const findVerificationToken = async (email, hashedToken) => {
 
 export const deleteUserById = async (userId) => {
   return await User.findByIdAndDelete(userId);
+};
+
+export const createOtpRecord = async (userId, otpHash, expiresAt) => {
+  return await Otp.create({
+    userId,
+    otpHash,
+    expiresAt,
+  });
 };

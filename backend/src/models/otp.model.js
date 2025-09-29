@@ -19,13 +19,11 @@ const otpSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true }
 );
+
+otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const Otp = mongoose.model("OTP", otpSchema);
 

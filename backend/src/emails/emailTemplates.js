@@ -1,5 +1,4 @@
 export function createVerificationEmailTemplate(name, verificationUrl) {
-  
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -151,4 +150,61 @@ export function createWelcomeEmailTemplate(name) {
 
 </body>
 </html>`;
+}
+
+export function createOtpEmailTemplate(otpCode) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Verification Code - VibeChat</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background:#f5f5f5 ; min-height: 100vh;">
+    
+    <!-- Email Container -->
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; margin-top: 40px; margin-bottom: 40px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+        
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg, #667eea, #764ba2);  padding: 40px 30px; text-align: center; position: relative;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">VibeChat</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px; font-weight: 400;">Connect. Chat. Vibe.</p>
+        </div>
+
+        <!-- Main Content -->
+        <div style="padding: 40px 30px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="background: linear-gradient(135deg, #667eea10, #764ba210); border-radius: 50px; width: 80px; height: 80px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 40px;">🔐</span>
+                </div>
+                <h2 style="color: #2d3748; margin: 0 0 15px 0; font-size: 24px; font-weight: 600;">Your Verification Code</h2>
+                <p style="color: #718096; font-size: 16px; line-height: 1.6; margin: 0;">Use the code below to complete your verification on VibeChat. This code is valid for 5 minutes.</p>
+            </div>
+
+            <!-- OTP Code Display -->
+            <div style="background: linear-gradient(135deg, #667eea10, #764ba210); border-radius: 16px; padding: 30px; margin: 30px 0; text-align: center; border: 2px dashed #667eea;">
+                <p style="color: #718096; margin: 0 0 10px 0; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Your Verification Code</p>
+                <div style="background: white; border-radius: 12px; padding: 20px; margin: 15px 0;">
+                    <h1 style="color: #2d3748; margin: 0; font-size: 48px; font-weight: 700; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otpCode}</h1>
+                </div>
+                <p style="color: #a0aec0; margin: 10px 0 0 0; font-size: 13px;">⏰ Expires in 5 minutes</p>
+            </div>
+
+            <!-- Security Warning -->
+            <div style="background: linear-gradient(135deg, #ff6b6b10, #feca5710); border-radius: 12px; padding: 20px; margin-top: 30px; border-left: 4px solid #ff6b6b;">
+                <h3 style="color: #2d3748; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">🛡️ Security Alert</h3>
+                <p style="color: #718096; margin: 0; font-size: 14px; line-height: 1.5;">Never share this code with anyone. VibeChat staff will never ask for your verification code. If you didn't request this code, please ignore this email or contact support immediately.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f7fafc; padding: 25px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #a0aec0; margin: 0 0 10px 0; font-size: 13px;">Need help? Contact us at <a href="mailto:support@vibechat.com" style="color: #667eea; text-decoration: none;">support@vibechat.com</a></p>
+            <p style="color: #cbd5e0; margin: 0; font-size: 12px;">© 2024 VibeChat. Made with for awesome people like you.</p>
+        </div>
+    </div>
+
+</body>
+</html>
+`;
 }

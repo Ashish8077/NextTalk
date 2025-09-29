@@ -1,19 +1,24 @@
 import {
+  sendOtpEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
 } from "../emails/emailHandlers.js";
 import {
+  createOtpRecord,
   createUser,
   findUserByEmail,
   findVerificationToken,
 } from "../repositories/user.repository.js";
 
-import crypto from "crypto";
 import {
   generateVerificationTokenAndExpiry,
   createHash,
 } from "../utils/token.js";
 import { AppError } from "../utils/AppError.js";
+
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import Otp from "../models/otp.model.js";
 
 export const signupService = async ({ fullname, email, password }) => {
   // Check existing user
@@ -111,4 +116,65 @@ export const sendWelcomeEmailService = async (fullname, email) => {
     // Non-critical: just log and swallow the error
     console.error(`Failed to send welcome email to ${email}:`, error);
   }
+};
+
+export const loginService = async ({ email, password }) => {
+  const user = await findUserByEmail(email);
+
+  const isUserValid = user && user.comparePassword(password);
+
+  if (!isUserValid) throw new AppError("Invalid credentials", 401);
+
+  if (!user.isVerified)
+    throw new AppError("Account not verified. Please check your email.", 403);
+
+  const otpCode = crypto.randomInt(100000, 999999).toString();
+
+  const saltRounds = 10;
+  const otpHash = await bcrypt.hash(otpCode, saltRounds);
+
+  const otpValidityMinutes = 5;
+  const expiresAt = Date.now() + otpValidityMinutes * 60 * 1000;
+
+  await createOtpRecord(user._id, otpHash, expiresAt);
+
+  try {
+    await sendOtpEmail(email, otpCode);
+  } catch (error) {
+    console.error("Error while sendig OTP", error.message);
+  }
+  return {
+    email: user.email,
+    otpExpiresIn: otpValidityMinutes * 60,
+  };
+};
+
+export const verifyOtpService = async ({ email, otpCode }) => {
+  const user = await findUserByEmail(email);
+  if (!user) throw new AppError("Invalid email or OTP", 400);
+
+  const otpRecord = await Otp.findOne({
+    userId: user._id,
+    used: false,
+    expiresAt: { $gt: new Date() },
+  }).sort({ createdAt: -1 });
+
+  if (!otpRecord) {
+    throw new AppError("Invalid email or OTP", 400);
+  }
+
+  const isMatch = await bcrypt.compare(otpCode, otpRecord.otpHash);
+  if (!isMatch) {
+    throw new AppError("Invalid email or OTP", 400);
+  }
+
+  otpRecord.used = true;
+  await otpRecord.save();
+
+  return {
+    id: user._id,
+    fullname: user.fullname,
+    email: user.email,
+    profilePic: user.profilePic,
+  };
 };
