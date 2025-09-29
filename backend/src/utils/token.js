@@ -11,8 +11,8 @@ export const generateVerificationTokenAndExpiry = (email) => {
   return { verificationToken, verificationTokenExpiry, verificationUrl };
 };
 
-export const hashToken = (token) => {
-  return crypto.createHash("sha256").update(token).digest("hex");
+export const createHash = (code) => {
+  return crypto.createHash("sha256").update(code).digest("hex");
 };
 
 const generateTokens = (userId) => {
