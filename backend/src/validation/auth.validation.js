@@ -42,7 +42,7 @@ export const verificationEmailSchema = Joi.object({
     "string.email": "Please enter a valid email address.",
     "any.required": "Email is required.",
   }),
-  token: Joi.string() .length(64).required().messages({
+  token: Joi.string().length(64).required().messages({
     "string.base": "Token must be a string.",
     "string.empty": "Token is required.",
     "string.length": "Token is invalid.", // Use a
@@ -56,18 +56,24 @@ export const verifyOtpSchema = Joi.object({
     "string.email": "Email must be valid",
   }),
   otpCode: Joi.string().length(6).pattern(/^\d+$/).required().messages({
+    "string.base": "OTP must be a string.",
     "string.empty": "OTP code is required",
     "string.length": "OTP code must be exactly 6 digits",
     "string.pattern.base": "OTP code must contain only digits",
+    "any.required": "OTP is required.",
   }),
 });
 
 export const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
+    "string.base": "Email must be a string.",
     "string.empty": "Email is required",
-    "string.email": "Email must be valid",
+    "string.email": "Please enter a valid email address.",
+    "any.required": "Email is required.",
   }),
   password: Joi.string().required().messages({
+    "string.base": "Password must be a string.",
     "string.empty": "Password is required",
+    "any.required": "Password is required.",
   }),
 });

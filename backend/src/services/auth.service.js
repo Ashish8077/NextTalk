@@ -6,6 +6,7 @@ import {
 import {
   createOtpRecord,
   createUser,
+  findLatestOtpRecord,
   findUserByEmail,
   findVerificationToken,
 } from "../repositories/user.repository.js";
@@ -115,10 +116,13 @@ export const sendWelcomeEmailService = async (username, email) => {
 
 export const loginService = async ({ email, password }) => {
   const user = await findUserByEmail(email);
+  if (!user) {
+    throw new AppError("Invalid credentials", 401);
+  }
 
-  const isUserValid = user && user.comparePassword(password);
+  const isPasswordValid = await user.comparePassword(password);
 
-  if (!isUserValid) throw new AppError("Invalid credentials", 401);
+  if (!isPasswordValid) throw new AppError("Invalid credentials", 401);
 
   if (!user.isVerified)
     throw new AppError("Account not verified. Please check your email.", 403);
@@ -146,15 +150,10 @@ export const loginService = async ({ email, password }) => {
 
 export const verifyOtpService = async ({ email, otpCode }) => {
   const user = await findUserByEmail(email);
-  if (!user) throw new AppError("Invalid email or OTP", 400);
 
-  const otpRecord = await Otp.findOne({
-    userId: user._id,
-    used: false,
-    expiresAt: { $gt: new Date() },
-  }).sort({ createdAt: -1 });
+  const otpRecord = user ? await findLatestOtpRecord(user._id) : null;
 
-  if (!otpRecord) {
+  if (!user || !otpRecord) {
     throw new AppError("Invalid email or OTP", 400);
   }
 

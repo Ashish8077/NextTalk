@@ -38,3 +38,11 @@ export const createOtpRecord = async (userId, otpHash, expiresAt) => {
     expiresAt,
   });
 };
+
+export const findLatestOtpRecord = async (userId) => {
+  return await Otp.findOne({
+    userId,
+    used: false,
+    expiresAt: { $gt: new Date() },
+  }).sort({ createdAt: -1 });
+};
