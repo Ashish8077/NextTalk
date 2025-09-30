@@ -11,6 +11,7 @@ import { validate } from "../middlewares/validate.js";
 import {
   loginSchema,
   signupSchema,
+  verificationEmailSchema,
   verifyOtpSchema,
 } from "../validation/auth.validation.js";
 import { sanitizeRequest } from "../middlewares/sanitizeRequest.js";
@@ -18,7 +19,12 @@ import { sanitizeRequest } from "../middlewares/sanitizeRequest.js";
 const router = Router();
 
 router.post("/signup", validate(signupSchema), sanitizeRequest, signup);
-router.get("/verify-email", sanitizeRequest, verifyEmail);
+router.post(
+  "/verify-email",
+  sanitizeRequest,
+  validate(verificationEmailSchema),
+  verifyEmail
+);
 router.post("/reverify-email", sanitizeRequest, resendVerificationEmail);
 
 router.post("/login", validate(loginSchema), sanitizeRequest, login);

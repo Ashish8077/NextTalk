@@ -8,14 +8,14 @@ export const findUserByEmail = async (email) => {
 };
 
 export const createUser = async ({
-  fullname,
+  username,
   email,
   password,
   verificationToken,
   verificationTokenExpiry,
 }) => {
   return await User.create({
-    fullname: fullname.trim(),
+    username: username.trim(),
     email: email.toLowerCase(),
     password,
     verificationToken,
@@ -26,11 +26,9 @@ export const createUser = async ({
 export const findVerificationToken = async (email, hashedToken) => {
   return await User.findOne({
     email,
+    verificationToken: hashedToken,
+    verificationTokenExpiry: { $gt: Date.now() },
   });
-};
-
-export const deleteUserById = async (userId) => {
-  return await User.findByIdAndDelete(userId);
 };
 
 export const createOtpRecord = async (userId, otpHash, expiresAt) => {

@@ -4,7 +4,7 @@ import { toJSONPlugin } from "../plugins/toJSON.plugin.js";
 
 const userSchema = new mongoose.Schema(
   {
-    fullname: {
+    username: {
       type: String,
       required: [true, "Full name is required"],
       minlength: [3, "Full name must be at least 3 characters"],
@@ -32,7 +32,6 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
     verificationTokenExpiry: { type: Date },
-    
   },
   { timestamps: true }
 );

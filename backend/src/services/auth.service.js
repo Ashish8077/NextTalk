@@ -20,7 +20,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import Otp from "../models/otp.model.js";
 
-export const signupService = async ({ fullname, email, password }) => {
+export const signupService = async ({ username, email, password }) => {
   // Check existing user
   const existingUser = await findUserByEmail(email);
 
@@ -34,7 +34,7 @@ export const signupService = async ({ fullname, email, password }) => {
 
   // Create user
   const newUser = await createUser({
-    fullname,
+    username,
     email,
     password,
     verificationToken: hashedToken,
@@ -44,7 +44,7 @@ export const signupService = async ({ fullname, email, password }) => {
   // Attempt to send verification email (fire-and-forget)
   try {
     await sendVerificationEmail(
-      fullname,
+      username,
       email,
       verificationToken,
       verificationUrl
@@ -56,21 +56,16 @@ export const signupService = async ({ fullname, email, password }) => {
 
   return {
     id: newUser._id,
-    fullname: newUser.fullname,
+    username: newUser.username,
     email: newUser.email,
   };
 };
 
 export const verifyEmailService = async ({ email, token }) => {
-  if (!email || !token) {
-    throw new AppError("Email or token missing.", 400);
-  }
-
   const hashedToken = createHash(token);
 
   const user = await findVerificationToken(email, hashedToken);
-
-  if (!user || user.verificationToken !== hashedToken) {
+  if (!user) {
     throw new AppError("Invalid or expired verification link", 400);
   }
 
@@ -79,7 +74,7 @@ export const verifyEmailService = async ({ email, token }) => {
   user.verificationTokenExpiry = undefined;
   await user.save();
   return {
-    fullname: user.fullname,
+    username: user.username,
     id: user._id,
     email: user.email,
     isVerified: user.isVerified,
@@ -88,7 +83,7 @@ export const verifyEmailService = async ({ email, token }) => {
 
 export const resendVerificationEmailService = async (email) => {
   const user = await findUserByEmail(email);
-  if (!user) throw new AppError("User not found", 404);
+  if (!user) return;
 
   const { verificationToken, verificationTokenExpiry, verificationUrl } =
     generateVerificationTokenAndExpiry(email);
@@ -99,7 +94,7 @@ export const resendVerificationEmailService = async (email) => {
 
   try {
     await sendVerificationEmail(
-      user.fullname,
+      user.username,
       user.email,
       verificationToken,
       verificationUrl
@@ -109,9 +104,9 @@ export const resendVerificationEmailService = async (email) => {
   }
 };
 
-export const sendWelcomeEmailService = async (fullname, email) => {
+export const sendWelcomeEmailService = async (username, email) => {
   try {
-    await sendWelcomeEmail(fullname, email);
+    await sendWelcomeEmail(username, email);
   } catch (error) {
     // Non-critical: just log and swallow the error
     console.error(`Failed to send welcome email to ${email}:`, error);

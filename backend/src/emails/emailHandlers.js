@@ -6,7 +6,7 @@ import {
 } from "./emailTemplates.js";
 
 export const sendVerificationEmail = async (
-  fullname,
+  username,
   email,
   verificationToken,
   verificationUrl
@@ -18,7 +18,7 @@ export const sendVerificationEmail = async (
       subject: "Verify Your Email Address",
       // text: "Verify Your Email Address",
       html: createVerificationEmailTemplate(
-        fullname,
+        username,
         verificationUrl,
         verificationToken
       ),
@@ -30,13 +30,13 @@ export const sendVerificationEmail = async (
   }
 };
 
-export const sendWelcomeEmail = async (fullname, email) => {
+export const sendWelcomeEmail = async (username, email) => {
   await transporter.sendMail({
     from: '"VibeChat"<ashishpawar6522@gmail.com>',
     to: email,
     subject: "Welcome to VibeChat 🎉",
-    text: `Hi ${fullname}, welcome to VibeChat!`,
-    html: createWelcomeEmailTemplate(fullname),
+    text: `Hi ${username}, welcome to VibeChat!`,
+    html: createWelcomeEmailTemplate(username),
   });
 };
 

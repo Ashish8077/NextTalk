@@ -6,7 +6,8 @@ import { AppError } from "./AppError.js";
 
 export const generateVerificationTokenAndExpiry = (email) => {
   const verificationToken = crypto.randomBytes(32).toString("hex");
-  const verificationTokenExpiry = Date.now() + 60 * 60 + 1000;
+  const verificationTokenExpiry = Date.now() + 1000 * 60 * 60;
+
   const verificationUrl = `${config.FRONTEND_URL}/api/auth/verify-email?email=${email}&token=${verificationToken}`;
   return { verificationToken, verificationTokenExpiry, verificationUrl };
 };

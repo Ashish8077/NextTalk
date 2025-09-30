@@ -20,12 +20,12 @@ export const signup = catchAsync(async (req, res) => {
 });
 
 export const verifyEmail = catchAsync(async (req, res) => {
-  const data = await verifyEmailService(req.query);
+  const data = await verifyEmailService(req.body);
   await generateTokenAndSetCookie(res, data.id);
 
   // Send welcome email (non-critical, failure won't block response)
   if (data.isVerified) {
-    sendWelcomeEmailService(data.fullname, data.email);
+    sendWelcomeEmailService(data.username, data.email);
   }
 
   return res.status(200).json({
@@ -38,8 +38,6 @@ export const verifyEmail = catchAsync(async (req, res) => {
 export const resendVerificationEmail = catchAsync(async (req, res) => {
   const { email } = req.body;
 
-  console.log(email);
-
   if (!email) {
     throw new AppError("Email is required", 400);
   }
@@ -48,7 +46,8 @@ export const resendVerificationEmail = catchAsync(async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "Verification email has been resent. Please check your inbox.",
+    message:
+      "If an account exists with this email, a verification link has been sent.",
   });
 });
 
