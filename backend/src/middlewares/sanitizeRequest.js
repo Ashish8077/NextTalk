@@ -6,7 +6,5 @@ export const sanitizeRequest = (req, res, next) => {
 
   if (req.body.otp) req.body.otp = req.body.otp.trim();
 
-  console.log(req.query);
-
   next();
 };
