@@ -31,11 +31,12 @@ export const findVerificationToken = async (email, hashedToken) => {
   });
 };
 
-export const createOtpRecord = async (userId, otpHash, expiresAt) => {
+export const createOtpRecord = async (userId, otpHash, expiresAt, type) => {
   return await Otp.create({
     userId,
     otpHash,
     expiresAt,
+    type,
   });
 };
 
@@ -45,4 +46,13 @@ export const findLatestOtpRecord = async (userId) => {
     used: false,
     expiresAt: { $gt: new Date() },
   }).sort({ createdAt: -1 });
+};
+
+export const findRecentOtp = async (userId, OTP_RATE_LIMIT_MS) => {
+  return await Otp.findOne({
+    userId,
+    createdAt: { $gt: new Date(Date.now() - OTP_RATE_LIMIT_MS) },
+  })
+    .select("_id createdAt")
+    .sort({ createdAt: -1 });
 };

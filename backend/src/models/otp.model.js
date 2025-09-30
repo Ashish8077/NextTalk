@@ -19,11 +19,19 @@ const otpSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    type: {
+      type: Boolean,
+      enums: ["LOGIN", "RESET_PASSWORD"],
+      require: true,
+    },
   },
   { timestamps: true }
 );
 
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+// Compound index to make queries fast
+otpSchema.index({ userId: 1, createdAt: -1 });
 
 const Otp = mongoose.model("OTP", otpSchema);
 

@@ -1,5 +1,6 @@
 import {
   sendOtpEmail,
+  sendRestEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
 } from "../emails/emailHandlers.js";
@@ -7,6 +8,7 @@ import {
   createOtpRecord,
   createUser,
   findLatestOtpRecord,
+  findRecentOtp,
   findUserByEmail,
   findVerificationToken,
 } from "../repositories/user.repository.js";
@@ -18,8 +20,9 @@ import {
 import { AppError } from "../utils/AppError.js";
 
 import bcrypt from "bcrypt";
-import crypto from "crypto";
+import { createOtpHashAndExpiryTime } from "../utils/otp.js";
 import Otp from "../models/otp.model.js";
+import config from "../config/index.js";
 
 export const signupService = async ({ username, email, password }) => {
   // Check existing user
@@ -115,6 +118,7 @@ export const sendWelcomeEmailService = async (username, email) => {
 };
 
 export const loginService = async ({ email, password }) => {
+  const otpValidityMinutes = 5;
   const user = await findUserByEmail(email);
   if (!user) {
     throw new AppError("Invalid credentials", 401);
@@ -127,13 +131,8 @@ export const loginService = async ({ email, password }) => {
   if (!user.isVerified)
     throw new AppError("Account not verified. Please check your email.", 403);
 
-  const otpCode = crypto.randomInt(100000, 999999).toString();
-
-  const saltRounds = 10;
-  const otpHash = await bcrypt.hash(otpCode, saltRounds);
-
-  const otpValidityMinutes = 5;
-  const expiresAt = Date.now() + otpValidityMinutes * 60 * 1000;
+  const { otpCode, otpHash, expiresAt } =
+    await createOtpHashAndExpiryTime(otpValidityMinutes);
 
   await createOtpRecord(user._id, otpHash, expiresAt);
 
@@ -144,7 +143,7 @@ export const loginService = async ({ email, password }) => {
   }
   return {
     email: user.email,
-    otpExpiresIn: otpValidityMinutes * 60,
+    otpExpiresIn: 5 * 60,
   };
 };
 
@@ -171,4 +170,67 @@ export const verifyOtpService = async ({ email, otpCode }) => {
     email: user.email,
     profilePic: user.profilePic,
   };
+};
+
+export const resendVerificationOtpService = async ({ email }) => {
+  const OTP_RATE_LIMIT_MS = 60 * 1000;
+  const otpValidityMinutes = 5;
+
+  const user = await findUserByEmail(email);
+
+  if (!user || !user.isVerified) return;
+
+  const recentOtp = await findRecentOtp(user._id, OTP_RATE_LIMIT_MS);
+
+  if (recentOtp) {
+    // HTTP 429: Too Many Requests
+    const remainingMs =
+      OTP_RATE_LIMIT_MS - (Date.now() - recentOtp.createdAt.getTime());
+    throw new AppError(
+      `Please wait ${Math.ceil(remainingMs / 1000)} seconds before requesting another OTP.`,
+      429
+    );
+  }
+
+  const { otpCode, otpHash, expiresAt } =
+    await createOtpHashAndExpiryTime(otpValidityMinutes);
+
+  console.log(otpCode, otpHash, expiresAt);
+  await createOtpRecord(user._id, otpHash, expiresAt);
+  try {
+    await sendOtpEmail(email, otpCode);
+  } catch (error) {
+    onsole.error(
+      "Error while sending OTP email for user:",
+      user.email,
+      error.message
+    );
+  }
+};
+
+export const requestPasswordResetService = async ({ email }) => {
+  
+  const user = await findUserByEmail(email);
+  if (!user) return;
+
+  const {
+    verificationToken: passwordResetToken,
+    verificationTokenExpiry: passwordResetExpires,
+  } = generateVerificationTokenAndExpiry(email);
+
+  const passwordResetUrl = `${config.FRONTEND_URL}/api/auth/reset-password?email=${email}&token=${passwordResetToken}`;
+
+  const hashedToken = createHash(passwordResetToken);
+
+  user.passwordResetToken = hashedToken;
+  user.passwordResetExpires = passwordResetExpires;
+  await user.save();
+
+  try {
+    await sendRestEmail(user.username, user.email, passwordResetUrl);
+  } catch (error) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    console.error("Error while sending Rest Password Email");
+  }
 };

@@ -1,6 +1,7 @@
 import { transporter } from "../lib/nodemailer.js";
 import {
   createOtpEmailTemplate,
+  createRestEmailTemplate,
   createVerificationEmailTemplate,
   createWelcomeEmailTemplate,
 } from "./emailTemplates.js";
@@ -46,5 +47,14 @@ export const sendOtpEmail = async (email, otpCode) => {
     to: email,
     subject: "Your VibeChat Account Verification Code (OTP)",
     html: createOtpEmailTemplate(otpCode),
+  });
+};
+
+export const sendRestEmail = async (username, email, passwordResetUrl) => {
+  await transporter.sendMail({
+    from: '"VibeChat"<ashishpawar6522@gmail.com>',
+    to: email,
+    subject: "Reset Your VibeChat Password",
+    html: createRestEmailTemplate(username, passwordResetUrl),
   });
 };

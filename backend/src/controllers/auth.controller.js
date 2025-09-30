@@ -1,7 +1,9 @@
 import { catchAsync } from "../utils/catchAsync.js";
 import {
   loginService,
+  requestPasswordResetService,
   resendVerificationEmailService,
+  resendVerificationOtpService,
   sendWelcomeEmailService,
   signupService,
   verifyEmailService,
@@ -67,6 +69,22 @@ export const verifyOtp = catchAsync(async (req, res) => {
     success: true,
     message: "Login successfully",
     data,
+  });
+});
+
+export const resendVerificationOtp = catchAsync(async (req, res) => {
+  await resendVerificationOtpService(req.body);
+  return res.status(200).json({
+    success: true,
+    message: "Success. Please check your inbox for the OTP.",
+  });
+});
+
+export const requestPasswordReset = catchAsync(async (req, res) => {
+  const data = await requestPasswordResetService(req.body);
+  return res.status(200).json({
+    success: true,
+    message: "Password reset successfully",
   });
 });
 

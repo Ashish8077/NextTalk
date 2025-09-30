@@ -6,10 +6,14 @@ import {
   verifyEmail,
   resendVerificationEmail,
   verifyOtp,
+  resendVerificationOtp,
+  requestPasswordReset,
 } from "../controllers/auth.controller.js";
 import { validate } from "../middlewares/validate.js";
 import {
   loginSchema,
+  resendVerificationOtpSchema,
+  resetPasswordSchema,
   signupSchema,
   verificationEmailSchema,
   verifyOtpSchema,
@@ -33,6 +37,20 @@ router.post(
   validate(verifyOtpSchema),
   sanitizeRequest,
   verifyOtp
+);
+
+router.post(
+  "/resend-verification-Otp",
+  validate(resendVerificationOtpSchema),
+  sanitizeRequest,
+  resendVerificationOtp
+);
+
+router.post(
+  "/reset-password",
+  validate(resetPasswordSchema),
+  sanitizeRequest,
+  requestPasswordReset
 );
 
 router.post("/logout", logout);
