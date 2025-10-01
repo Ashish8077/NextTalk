@@ -19,11 +19,8 @@ const otpSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    type: {
-      type: Boolean,
-      enums: ["LOGIN", "RESET_PASSWORD"],
-      require: true,
-    },
+    lastSentAt: { type: Date, default: null },
+    resendCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

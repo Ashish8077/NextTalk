@@ -185,7 +185,7 @@ export function createOtpEmailTemplate(otpCode) {
             <div style="background: linear-gradient(135deg, #667eea10, #764ba210); border-radius: 16px; padding: 30px; margin: 30px 0; text-align: center; border: 2px dashed #667eea;">
                 <p style="color: #718096; margin: 0 0 10px 0; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Your Verification Code</p>
                 <div style="background: white; border-radius: 12px; padding: 20px; margin: 15px 0;">
-                    <h1 style="color: #2d3748; margin: 0; font-size: 48px; font-weight: 700; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otpCode}</h1>
+                    <h1 style="color: #2d3748; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otpCode}</h1>
                 </div>
                 <p style="color: #a0aec0; margin: 10px 0 0 0; font-size: 13px;">⏰ Expires in 5 minutes</p>
             </div>

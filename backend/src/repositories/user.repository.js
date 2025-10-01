@@ -39,12 +39,11 @@ export const findPasswordRestToken = async (email, passwordResetToken) => {
   });
 };
 
-export const createOtpRecord = async (userId, otpHash, expiresAt, type) => {
+export const createOtpRecord = async (userId, otpHash, expiresAt) => {
   return await Otp.create({
     userId,
     otpHash,
     expiresAt,
-    type,
   });
 };
 
@@ -63,4 +62,12 @@ export const findRecentOtp = async (userId, OTP_RATE_LIMIT_MS) => {
   })
     .select("_id createdAt")
     .sort({ createdAt: -1 });
+};
+
+export const findActiveOtp = async (userId, now) => {
+  return await Otp.findOne({
+    userId,
+    expiresAt: { $gt: now },
+    used: false,
+  });
 };

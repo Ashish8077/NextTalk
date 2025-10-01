@@ -7,6 +7,7 @@ import {
 import {
   createOtpRecord,
   createUser,
+  findActiveOtp,
   findLatestOtpRecord,
   findPasswordRestToken,
   findRecentOtp,
@@ -120,32 +121,62 @@ export const sendWelcomeEmailService = async (username, email) => {
 };
 
 export const loginService = async ({ email, password }) => {
+  const now = new Date();
   const otpValidityMinutes = 5;
   const user = await findUserByEmail(email);
+
   if (!user) {
     throw new AppError("Invalid credentials", 401);
   }
 
+  if (user.lockUntil && user.lockUntil > now) {
+    const minutesLeft = Math.ceil((user.lockUntil - new Date()) / 60000);
+    throw new AppError(
+      `Account locked due to too many failed attempts. Try again in ${minutesLeft} minute(s).`,
+      403
+    );
+  }
+
   const isPasswordValid = await user.comparePassword(password);
 
-  if (!isPasswordValid) throw new AppError("Invalid credentials", 401);
+  if (!isPasswordValid) {
+    user.loginAttempts += 1;
+    if (user.loginAttempts >= 5) {
+      user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); //lock 15 min
+      user.loginAttempts = 0;
+    }
+    await user.save();
+    throw new AppError("Invalid credentials", 401);
+  }
 
   if (!user.isVerified)
     throw new AppError("Account not verified. Please check your email.", 403);
 
+  const activeOtp = await findActiveOtp(user._id, now);
+
+  if (activeOtp) {
+    throw new AppError("OTP already sent. Please check your email.", 429);
+  }
+
+  user.loginAttempts = 0;
+  user.lockUntil = null;
+  await user.save();
+
   const { otpCode, otpHash, expiresAt } =
     await createOtpHashAndExpiryTime(otpValidityMinutes);
 
-  await createOtpRecord(user._id, otpHash, expiresAt);
+  const otpRecord = await createOtpRecord(user._id, otpHash, expiresAt);
 
   try {
     await sendOtpEmail(email, otpCode);
   } catch (error) {
-    console.error("Error while sendig OTP", error.message);
+    await Otp.deleteOne({ _id: otpRecord._id });
+    console.error("Error while sending OTP", error.message);
+    throw new AppError("Failed to send OTP. Please try again.", 500);
   }
   return {
     email: user.email,
-    otpExpiresIn: 5 * 60,
+    otpExpiresIn: otpValidityMinutes * 60,
   };
 };
 
@@ -177,6 +208,8 @@ export const verifyOtpService = async ({ email, otpCode }) => {
 export const resendVerificationOtpService = async ({ email }) => {
   const OTP_RATE_LIMIT_MS = 60 * 1000;
   const otpValidityMinutes = 5;
+  const TIME_WINDOW = 60 * 60 * 1000;
+  const MAX_REQUESTS = 5;
 
   const user = await findUserByEmail(email);
 
@@ -197,7 +230,6 @@ export const resendVerificationOtpService = async ({ email }) => {
   const { otpCode, otpHash, expiresAt } =
     await createOtpHashAndExpiryTime(otpValidityMinutes);
 
-
   await createOtpRecord(user._id, otpHash, expiresAt);
   try {
     await sendOtpEmail(email, otpCode);
@@ -211,15 +243,15 @@ export const resendVerificationOtpService = async ({ email }) => {
 };
 
 export const requestPasswordResetService = async ({ email }) => {
-  const user = await findUserByEmail(email);
-
-  //Avoid revealing whether the email exists prevents enumeration attacks
-  if (!user) return;
-
   const now = Date.now();
   const TIME_WINDOW = 60 * 60 * 1000; // 1 hour
   const MIN_INTERVAL = 60 * 1000; // 1 minute
   const MAX_REQUESTS = 5;
+  
+  const user = await findUserByEmail(email);
+
+  //Avoid revealing whether the email exists prevents enumeration attacks
+  if (!user) return;
 
   // Reset counter if time window expired
   if (now - user.passwordResetSentAt > TIME_WINDOW) {
@@ -275,11 +307,7 @@ export const verifyAndrestPasswordService = async ({
 }) => {
   const tokenHash = createHash(token);
 
- 
-
   const user = await findPasswordRestToken(email, tokenHash);
-
- 
 
   if (!user) throw new AppError("Invalid or expired  token");
 
