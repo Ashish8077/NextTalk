@@ -95,3 +95,45 @@ export const resetPasswordSchema = Joi.object({
     "any.required": "Email is required. ",
   }),
 });
+
+export const verifyRestPasswordSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.base": "Email must be a string. ",
+    "string.empty": "Email is required",
+    "string.email": "Please enter a valid email address. ",
+    "any.required": "Email is required. ",
+  }),
+  token: Joi.string().length(64).required().messages({
+    "string.base": "Token must be a string.",
+    "string.empty": "Token is required.",
+    "string.length": "Token is invalid.", // Use a
+    "any.required": "Token is required.",
+  }),
+  newPassword: Joi.string()
+    .min(8)
+    .max(64)
+    .required()
+    .pattern(
+      new RegExp(
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_\\-+=[\\]{};':\"\\\\|,.<>/?`~])"
+      )
+    )
+    .messages({
+      "string.base": "Password must be a string.",
+      "string.empty": "Password is required",
+      "string.min": "Password must be at least 8 characters",
+      "string.max": "Password must not exceed 64 characters",
+      "string.pattern.base":
+        "Password must contain uppercase, lowercase, number, and special character",
+      "any.required": "Password is required.",
+    }),
+  confirmPassword: Joi.string()
+    .required()
+    .valid(Joi.ref("newPassword"))
+    .messages({
+      "string.base": "Confirm Password must be a string.",
+      "string.empty": "Confirm Password is required",
+      "any.required": "Confirm password is required.",
+      "any.only": "Passwords do not match.",
+    }),
+}).with("newPassword", "confirmPassword");

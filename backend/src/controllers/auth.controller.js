@@ -6,6 +6,7 @@ import {
   resendVerificationOtpService,
   sendWelcomeEmailService,
   signupService,
+  verifyAndrestPasswordService,
   verifyEmailService,
   verifyOtpService,
 } from "../services/auth.service.js";
@@ -84,7 +85,15 @@ export const requestPasswordReset = catchAsync(async (req, res) => {
   const data = await requestPasswordResetService(req.body);
   return res.status(200).json({
     success: true,
-    message: "Password reset successfully",
+    message: "If an account with that email exists, we have sent instructions.",
+  });
+});
+
+export const verifyAndrestPassword = catchAsync(async (req, res) => {
+  const data = await verifyAndrestPasswordService(req.body);
+  return res.status(200).json({
+    success: true,
+    message: "If an account with that email exists, we have sent instructions.",
   });
 });
 

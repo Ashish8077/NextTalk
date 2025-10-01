@@ -8,6 +8,7 @@ import {
   createOtpRecord,
   createUser,
   findLatestOtpRecord,
+  findPasswordRestToken,
   findRecentOtp,
   findUserByEmail,
   findVerificationToken,
@@ -23,6 +24,7 @@ import bcrypt from "bcrypt";
 import { createOtpHashAndExpiryTime } from "../utils/otp.js";
 import Otp from "../models/otp.model.js";
 import config from "../config/index.js";
+import User from "../models/user.model.js";
 
 export const signupService = async ({ username, email, password }) => {
   // Check existing user
@@ -195,7 +197,7 @@ export const resendVerificationOtpService = async ({ email }) => {
   const { otpCode, otpHash, expiresAt } =
     await createOtpHashAndExpiryTime(otpValidityMinutes);
 
-  console.log(otpCode, otpHash, expiresAt);
+
   await createOtpRecord(user._id, otpHash, expiresAt);
   try {
     await sendOtpEmail(email, otpCode);
@@ -209,9 +211,39 @@ export const resendVerificationOtpService = async ({ email }) => {
 };
 
 export const requestPasswordResetService = async ({ email }) => {
-  
   const user = await findUserByEmail(email);
+
+  //Avoid revealing whether the email exists prevents enumeration attacks
   if (!user) return;
+
+  const now = Date.now();
+  const TIME_WINDOW = 60 * 60 * 1000; // 1 hour
+  const MIN_INTERVAL = 60 * 1000; // 1 minute
+  const MAX_REQUESTS = 5;
+
+  // Reset counter if time window expired
+  if (now - user.passwordResetSentAt > TIME_WINDOW) {
+    user.passwordResetSendCount = 0;
+  }
+
+  // Check cooldown interval
+  if (now - user.passwordResetSentAt < MIN_INTERVAL) {
+    const cooldown = Math.ceil(
+      (MIN_INTERVAL - (now - user.passwordResetSentAt)) / 1000
+    );
+    throw new AppError(
+      `Please wait ${cooldown} seconds before requesting another OTP.`,
+      429
+    );
+  }
+
+  // Check max requests
+  if (user.passwordResetSendCount >= MAX_REQUESTS) {
+    throw new AppError("Too many requests. Try again later", 429);
+  }
+
+  user.passwordResetSendCount += 1;
+  user.passwordResetSentAt = now;
 
   const {
     verificationToken: passwordResetToken,
@@ -233,4 +265,34 @@ export const requestPasswordResetService = async ({ email }) => {
     user.passwordResetExpires = undefined;
     console.error("Error while sending Rest Password Email");
   }
+};
+
+export const verifyAndrestPasswordService = async ({
+  email,
+  newPassword,
+  confirmPassword,
+  token,
+}) => {
+  const tokenHash = createHash(token);
+
+ 
+
+  const user = await findPasswordRestToken(email, tokenHash);
+
+ 
+
+  if (!user) throw new AppError("Invalid or expired  token");
+
+  const isSameAsOld = await user.comparePassword(newPassword, user.password);
+  if (isSameAsOld) {
+    throw new AppError("New password must be different from old password", 400);
+  }
+  user.password = newPassword;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+  return {
+    id: user._id,
+    username: user.username,
+  };
 };

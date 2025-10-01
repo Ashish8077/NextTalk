@@ -8,6 +8,7 @@ import {
   verifyOtp,
   resendVerificationOtp,
   requestPasswordReset,
+  verifyAndrestPassword,
 } from "../controllers/auth.controller.js";
 import { validate } from "../middlewares/validate.js";
 import {
@@ -17,6 +18,7 @@ import {
   signupSchema,
   verificationEmailSchema,
   verifyOtpSchema,
+  verifyRestPasswordSchema,
 } from "../validation/auth.validation.js";
 import { sanitizeRequest } from "../middlewares/sanitizeRequest.js";
 
@@ -51,6 +53,13 @@ router.post(
   validate(resetPasswordSchema),
   sanitizeRequest,
   requestPasswordReset
+);
+
+router.post(
+  "/verify-reset-password",
+  validate(verifyRestPasswordSchema),
+  sanitizeRequest,
+  verifyAndrestPassword
 );
 
 router.post("/logout", logout);

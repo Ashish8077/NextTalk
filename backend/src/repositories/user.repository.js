@@ -31,6 +31,14 @@ export const findVerificationToken = async (email, hashedToken) => {
   });
 };
 
+export const findPasswordRestToken = async (email, passwordResetToken) => {
+  return await User.findOne({
+    email,
+    passwordResetToken,
+    passwordResetExpires: { $gt: new Date(Date.now()) },
+  });
+};
+
 export const createOtpRecord = async (userId, otpHash, expiresAt, type) => {
   return await Otp.create({
     userId,
